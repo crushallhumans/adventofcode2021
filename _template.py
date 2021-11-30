@@ -62,7 +62,7 @@ if __name__ == '__main__':
 		print (filename_script)
 		filename = filename_script.split('.')[0]
 		input_set = ()
-		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/inputstring_%s.txt" % filename) as input_file:
+		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/2021/inputstring_%s.txt" % filename) as input_file:
 		    input_set = [int(input_line.strip()) for input_line in input_file]
 		ret = basic_action(input_set)
 		print (ret)
