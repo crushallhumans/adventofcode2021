@@ -8,14 +8,14 @@ import sys
 import math
 import unittest
 
-def basic_action(param_set):
+def one_star(param_set):
 	c = 0
 	for i in param_set:
 		continue
 	return c
 
 
-def additional_action(param_set):
+def two_star(param_set):
 	c = 0
 	for i in param_set:
 		continue
@@ -37,17 +37,17 @@ class testCase(unittest.TestCase):
 		1
 	)
 
-	def test_basic_action(self):
+	def test_one_star(self):
 		self.assertEqual(
-			basic_action(
+			one_star(
 				self.__class__.test_set
 			),
 			88888888
 		)
 
-	def test_additional_action(self):
+	def test_two_star(self):
 		self.assertEqual(
-			additional_action(
+			two_star(
 				self.__class__.test_set
 			),
 			77777777
@@ -67,8 +67,8 @@ if __name__ == '__main__':
 		input_set = ()
 		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/2021/%s.txt" % filename) as input_file:
 		    input_set = [int(input_line.strip()) for input_line in input_file]
-		ret = basic_action(input_set)
+		ret = one_star(input_set)
 		print (ret)
 
-		ret = additional_action(input_set)
+		ret = two_star(input_set)
 		print (ret)
