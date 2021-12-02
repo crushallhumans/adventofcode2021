@@ -8,15 +8,17 @@ import sys
 import math
 import unittest
 
+DEBUG = False
+
 def one_star(param_set):
-	c = 0
+	c = 8888
 	for i in param_set:
 		continue
 	return c
 
 
 def two_star(param_set):
-	c = 0
+	c = 7777
 	for i in param_set:
 		continue
 	return c
@@ -32,6 +34,9 @@ def puzzle_text():
 
 
 class testCase(unittest.TestCase):
+	global DEBUG
+	DEBUG = True
+
 	test_set = (
 		0,
 		1
@@ -42,7 +47,7 @@ class testCase(unittest.TestCase):
 			one_star(
 				self.__class__.test_set
 			),
-			88888888
+			8888
 		)
 
 	def test_two_star(self):
@@ -50,7 +55,7 @@ class testCase(unittest.TestCase):
 			two_star(
 				self.__class__.test_set
 			),
-			77777777
+			7777
 		)
 
 
@@ -61,6 +66,7 @@ if __name__ == '__main__':
 		puzzle_text()
 
 	except:
+		DEBUG = False
 		filename_script = os.path.basename(__file__)
 		print (filename_script)
 		filename = filename_script.split('.')[0]
