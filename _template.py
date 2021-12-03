@@ -4,6 +4,7 @@
 # 12/n/2021
 
 import os
+import re
 import sys
 import math
 import unittest
@@ -11,6 +12,7 @@ import unittest
 DEBUG = False
 
 def one_star(param_set):
+	param_set = reprocess_input(param_set)
 	c = 8888
 	for i in param_set:
 		continue
@@ -18,17 +20,24 @@ def one_star(param_set):
 
 
 def two_star(param_set):
+	param_set = reprocess_input(param_set)
 	c = 7777
 	for i in param_set:
 		continue
 	return c
 
-
+def reprocess_input(param_set):
+	if isinstance(param_set,str):
+		l = []
+		l = [input_line.strip() for input_line in param_set.splitlines()]
+		param_set = l
+	return param_set	
 
 
 def puzzle_text():
 	print("""
 --- Day N: X ---
+
 """)
 
 
@@ -72,7 +81,7 @@ if __name__ == '__main__':
 		filename = filename_script.split('.')[0]
 		input_set = ()
 		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/2021/%s.txt" % filename) as input_file:
-		    input_set = [int(input_line.strip()) for input_line in input_file]
+		    input_set = [input_line.strip() for input_line in input_file]
 		ret = one_star(input_set)
 		print (ret)
 
