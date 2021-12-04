@@ -99,8 +99,11 @@ class Board():
 			# but it doesn't have to be zero, so alter it to a value outside the regular set
 			if i == 0:
 				i = self.zero_val
+
+			# a number will match or not, and if so point at the row & col containing it
 			self.data['matches'][str(i)] = [row_pos, c, False]
 
+			# rows and cols are sums of their members - if they drop to zero they are bingo
 			self.data['row_found'][row_pos] += i
 			self.data['col_found'][c] += i
 
@@ -116,6 +119,10 @@ class Board():
 		# save raw row val, maybe we need it
 		self.data['rows'].append(new_row)
 
+	def get_aoc_answer(self, i):
+		# AoC needs called_num * (board_total - matched_total)
+		return i * (self.data['sum_total'] - self.data['match_sum'])
+
 	def find_match(self, ii):
 		ret = 0
 		i = int(ii)
@@ -125,35 +132,49 @@ class Board():
 			i = self.zero_val
 
 		if DEBUG: print("called %s",i)
-		if str(i) in self.data['matches'] and self.data['matches'][str(i)][2] == False and not self.bingoed:
+		if (
+			# does the val match
+			str(i) in self.data['matches'] 
+			# is it the first time it's matched
+			and self.data['matches'][str(i)][2] == False 
+			# has the board not yet bingoed
+			and not self.bingoed
+		):
 			if DEBUG: 
 				print ("\tMATCH board %s" % self.data['identifier'])
 				print ("\t%s" % self.check())
 
+			# log match
 			match = self.data['matches'][str(i)]
 			match[2] = True
 
-			# check row bingo
+			# decrement row sum
 			self.data['row_found'][match[0]] -= i
+
+			# increment found total
 			self.data['match_sum'] += int(ii)
 
+			# check row bingo
 			if self.data['row_found'][match[0]] == 0:
 				if DEBUG: 
-					print ("\tFUCKING BINGO %s" % self.data['identifier'])
+					print ("\tFUCKING ROW BINGO %s" % self.data['identifier'])
 					print ("\t%s" % self.check())
-				ret = int(ii) * (self.data['sum_total'] - self.data['match_sum'])
+
+				ret = self.get_aoc_answer(int(ii))
 				self.bingoed = True
 				return ret
 
-			# check col bingo
+			# decrement column sum
 			self.data['col_found'][match[1]] -= i
-			# don't double-subtract from the sub! self.data['match_sum'] += int(ii)
+			# don't double-add to the found total! self.data['match_sum'] += int(ii)
 
+			# check col bingo
 			if self.data['col_found'][match[1]] == 0:
 				if DEBUG: 
-					print ("\tFUCKING BINGO %s" % self.data['identifier'])
+					print ("\tFUCKING COLUMN BINGO %s" % self.data['identifier'])
 					print ("\t%s" % self.check())
-				ret = int(ii) * (self.data['sum_total'] - self.data['match_sum'])
+
+				ret = self.get_aoc_answer(int(ii))
 				self.bingoed = True
 				return ret
 
