@@ -155,21 +155,15 @@ class Board():
 			# increment total match sum
 			self.data['match_sum'] += int(ii)
 
-			# check row bingo
-			if self.data['row_found'][match[0]] == 0:
+			# check for bingo
+			if (
+				self.data['row_found'][match[0]] == 0
+				or 
+				self.data['col_found'][match[1]] == 0
+			):
 				if DEBUG: 
-					print ("\tFUCKING ROW BINGO %s" % self.data['identifier'])
-					print ("\t%s" % self.check())
-
-				ret = self.get_aoc_answer(int(ii))
-				self.bingoed = True
-				return ret
-
-			# check col bingo
-			if self.data['col_found'][match[1]] == 0:
-				if DEBUG: 
-					print ("\tFUCKING COLUMN BINGO %s" % self.data['identifier'])
-					print ("\t%s" % self.check())
+					print ("\t\tFUCKING BINGO %s" % self.data['identifier'])
+					print ("\t\t%s" % self.check())
 
 				ret = self.get_aoc_answer(int(ii))
 				self.bingoed = True
