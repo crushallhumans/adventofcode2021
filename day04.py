@@ -148,10 +148,11 @@ class Board():
 			match = self.data['matches'][str(i)]
 			match[2] = True
 
-			# decrement row sum
+			# decrement found sums
 			self.data['row_found'][match[0]] -= i
+			self.data['col_found'][match[1]] -= i
 
-			# increment found total
+			# increment total match sum
 			self.data['match_sum'] += int(ii)
 
 			# check row bingo
@@ -163,10 +164,6 @@ class Board():
 				ret = self.get_aoc_answer(int(ii))
 				self.bingoed = True
 				return ret
-
-			# decrement column sum
-			self.data['col_found'][match[1]] -= i
-			# don't double-add to the found total! self.data['match_sum'] += int(ii)
 
 			# check col bingo
 			if self.data['col_found'][match[1]] == 0:
