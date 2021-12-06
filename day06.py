@@ -36,7 +36,7 @@ def one_star(param_set, days = 80):
 				fish[c] -= 1
 			elif i == 0:
 				add += 1
-				fish[c] = 6
+				fish[c] = lifecycle_root
 			c += 1
 		for i in range(0,add):
 			fish.append(lifecycle_new)
