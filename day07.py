@@ -107,6 +107,8 @@ def calc_set_fuel_linear(param_set, fuel_proposition, fuel_costs):
 	for i in param_set:
 		if DEBUG: print(i,fuel_proposition)
 		diff =  abs(int(i) - int(fuel_proposition))
+		## repeating this operation every time for 1898 iterations took 50sec!
+		## passing it in as a dict from the outer loop drops wallclock to 0.44sec
 		# c = 1
 		# linear = 0
 		# for j in range(0,diff):
