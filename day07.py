@@ -41,9 +41,12 @@ def one_star(param_set, linear = False):
 			totals[i]['num'] += 1
 	if DEBUG: print (totals)
 
+	max_pos = 0
 	fuel_calc_k = list(totals.keys())
 	fuel_calc = []
 	for i in fuel_calc_k:
+		if int(i) > max_pos:
+			max_pos = int(i) 
 		fuel_calc.append(int(i))
 	fuel_calc.sort()
 	fuel_calc.pop()
@@ -55,9 +58,22 @@ def one_star(param_set, linear = False):
 		if DEBUG: print(fuel_calc,start,end)
 
 		lent = end-start
+
+		#memoize the fuel costs! massively more efficient
+		fuel_costs = {}
+		for i in range(0, max_pos):
+			t = 0
+			c = 1
+			linear = 0
+			for j in range(0,i):
+				t += c
+				c += 1
+			fuel_costs[i] = t
+		if DEBUG: print(fuel_costs)
+
 		for i in range(start,end):
 			print(i,lent,time.time()-t0)
-			fuels.append(calc_set_fuel_linear(param_set,i))	 
+			fuels.append(calc_set_fuel_linear(param_set,i,fuel_costs))	 
 			
 	else:
 		for i in fuel_calc:
@@ -86,18 +102,18 @@ def calc_set_fuel_flat(param_set, fuel_proposition):
 		total += abs(int(i) - int(fuel_proposition))
 	return total
 
-def calc_set_fuel_linear(param_set, fuel_proposition):
+def calc_set_fuel_linear(param_set, fuel_proposition, fuel_costs):
 	total = 0
 	for i in param_set:
 		if DEBUG: print(i,fuel_proposition)
 		diff =  abs(int(i) - int(fuel_proposition))
-		c = 1
-		linear = 0
-		for j in range(0,diff):
-			linear += c
-			c += 1
-			if DEBUG: print("\t",linear)
-		total += linear
+		# c = 1
+		# linear = 0
+		# for j in range(0,diff):
+		# 	linear += c
+		# 	c += 1
+		# 	if DEBUG: print("\t",linear)
+		total += fuel_costs[diff] #linear
 	return total
 
 
