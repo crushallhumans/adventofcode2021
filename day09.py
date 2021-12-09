@@ -18,10 +18,12 @@ def puzzle(param_set,step="one"):
 	h = HeightMap()
 	for i in param_set:
 		h.add_row(i)
+	h.build_cols_and_points()
 	h.calculate_adjacent_areas()
-	print(h)
+	#print(h)
+	lo = h.sum_low_areas()
 	if step=="one":
-		return h.sum_low_areas()
+		return lo
 	elif step=="two":
 		return h.sum_basins()
 
@@ -44,8 +46,13 @@ class HeightMap:
 
 	def __init__(self):
 		self.rows = []
+		self.cols = []
+		self.lows = []
+		self.width = 0
+		self.height = 0
+		self.points = {}
+		self.basins = {}
 		self.adjacent_areas = {}
-		self.num_lows = 0
 
 	def __str__(self):
 		x = []
@@ -64,25 +71,76 @@ class HeightMap:
 
 	def add_row(self,i):
 		self.rows.append(list(i))
+		if not self.width:
+			self.width = len(list(i))
+
+	def build_cols_and_points(self):
+		for i in range(0,self.width):
+			col = []
+			for j in self.rows:
+				col.append(int(j[i]))
+			self.cols.append(col)
+		c = 0
+		for i in self.cols:
+			d = 0
+			for j in i:
+				self.points["%d,%d"%(c,d)] = j
+				d += 1
+			c += 1
 
 	def sum_low_areas(self):
 		total = 0
 		for i in self.adjacent_areas.keys():
 			if self.adjacent_areas[i]['low']:
 				total += int(self.adjacent_areas[i]['val']) + 1
+				self.lows.append([self.adjacent_areas[i]['pos_x'],self.adjacent_areas[i]['pos_y']])
 		return total
 
 	def sum_basins(self):
-		sizes = []
-		for hh in self.adjacent_areas.keys():
-			h = self.adjacent_areas[hh]
-			if h['low']:
-				adj = len(h['adjacents'])
-				bsn = len(h['basins'])
-				h['basin_size'] = adj+bsn
-				sizes.append(h['basin_size'] + 1)
-		sizes.sort()
-		return(sizes[-1] * sizes[-2] * sizes[-3])
+		# sizes = []
+		# for hh in self.adjacent_areas.keys():
+		# 	h = self.adjacent_areas[hh]
+		# 	if h['low']:
+		# 		adj = len(h['adjacents'])
+		# 		bsn = len(h['basins'])
+		# 		h['basin_size'] = adj+bsn
+		# 		sizes.append(h['basin_size'] + 1)
+		# sizes.sort()
+		# print(self.cols)
+		# print(self.points)
+		# return(sizes[-1] * sizes[-2] * sizes[-3])
+
+
+		for i in self.lows:
+			idx = "%d,%d"%(i[0],i[1])
+			self.basins[idx] = {}
+			self.simple_box_search([i[0],i[1]],idx)
+		#print("basins",self.basins)
+		lengths = []
+		for i in self.basins.keys():
+			length = len(self.basins[i].keys())
+			lengths.append(length)
+		lengths.sort()
+		#print (lengths)
+		return lengths[-1] * lengths[-2] * lengths[-3]
+
+
+
+	def simple_box_search(self,pos,basin):
+		checks = [
+			[ pos[0]-1,	pos[1]	 ],
+			[ pos[0]+1,	pos[1]	 ],
+			[ pos[0],	pos[1]-1 ],
+			[ pos[0],	pos[1]+1 ],
+		]
+		for i in checks:
+			idx = "%d,%d"%(i[0],i[1])
+			#print("sbs ",idx)
+			if idx in self.points:
+				adj = self.points[idx]
+				if adj < 9 and idx not in self.basins[basin]:
+					self.basins[basin][idx] = adj
+					self.simple_box_search([i[0],i[1]],basin)
 
 
 	def calculate_adjacent_areas(self):
@@ -130,16 +188,16 @@ class HeightMap:
 					if val >= adj:
 						h['low'] = False
 
-		for hh in self.adjacent_areas:
-			h = self.adjacent_areas[hh]
-			if h['low']:
-				print(h)
-				self.num_lows += 1
-				print("basin searching on X: ",h['pos_x'],h['pos_y'])
-				self.recursive_basin_search(hh,int(h['val']),int(h['pos_x']),int(h['pos_y']),'x')
-				print("basin searching on Y: ",h['pos_x'],h['pos_y'])
-				self.recursive_basin_search(hh,int(h['val']),int(h['pos_x']),int(h['pos_y']),'y')
-				print("basin searched: ",h)
+		# for hh in self.adjacent_areas:
+		# 	h = self.adjacent_areas[hh]
+		# 	if h['low']:
+		# 		print(h)
+		# 		self.num_lows += 1
+		# 		print("basin searching on X: ",h['pos_x'],h['pos_y'])
+		# 		self.recursive_basin_search(hh,int(h['val']),int(h['pos_x']),int(h['pos_y']),'x')
+		# 		print("basin searching on Y: ",h['pos_x'],h['pos_y'])
+		# 		self.recursive_basin_search(hh,int(h['val']),int(h['pos_x']),int(h['pos_y']),'y')
+		# 		print("basin searched: ",h)
 
 				# bah! this builds a basin out from the low point itself
 				#  but! to build a basin one must treat each subsequent point <9 as its own basin!
@@ -181,84 +239,87 @@ class HeightMap:
 					# 		build_basin_x_neg = False
 
 
-		print(json.dumps(self.adjacent_areas, indent = 2))
+		#print(json.dumps(self.adjacent_areas, indent = 2))
 
-	def recursive_basin_search(self,hh,ival,x_pos,y_pos,axis, depth = 0):
-		h = self.adjacent_areas[hh]
-		if ival < 9:
-			# this method continues along "axis" (x or y) in both directions until it hits an edge or a 9
-			# if it encounters a non-edge/non-9 value, and it's not present in h['basins']
-				# add to h['basins']
-				# invoke recursive_basin_search() in the OPPOSITE axis
-			# SO UGLY
-			#	need to abstract for x/y and pos/neg
-			#	for now, copypasta :emojipuke:
 
-			if axis == 'y':
-				new_axis = 'x'
 
-				build_basin_y_pos = True
-				y_pos += 1
-				while build_basin_y_pos:
-					idx = "%d,%d"%(x_pos,y_pos)
-					print("1",idx)
-					if y_pos < len(self.rows) and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
-						val = int(self.rows[y_pos][x_pos])
-						print(" ",val," d",depth)
-						h['basins'][idx] = val
-						#xxx = input()
-						self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
-						y_pos += 1
-					else:
-						build_basin_y_pos = False
 
-				build_basin_y_neg = True
-				y_pos -= 1
-				while build_basin_y_neg:
-					idx = "%d,%d"%(x_pos,y_pos)
-					print("2",idx)
-					if y_pos >= 0 and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
-						val = int(self.rows[y_pos][x_pos])
-						print(" ",val," d",depth)
-						h['basins'][idx] = val
-						#xxx = input()
-						self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
-						y_pos -= 1
-					else:
-						build_basin_y_neg = False
+	# def recursive_basin_search(self,hh,ival,x_pos,y_pos,axis, depth = 0):
+	# 	h = self.adjacent_areas[hh]
+	# 	if ival < 9:
+	# 		# this method continues along "axis" (x or y) in both directions until it hits an edge or a 9
+	# 		# if it encounters a non-edge/non-9 value, and it's not present in h['basins']
+	# 			# add to h['basins']
+	# 			# invoke recursive_basin_search() in the OPPOSITE axis
+	# 		# SO UGLY
+	# 		#	need to abstract for x/y and pos/neg
+	# 		#	for now, copypasta :emojipuke:
 
-			elif axis == 'x':
-				new_axis = 'y'
+	# 		if axis == 'y':
+	# 			new_axis = 'x'
 
-				build_basin_x_pos = True
-				x_pos += 1
-				while build_basin_x_pos:
-					idx = "%d,%d"%(x_pos,y_pos)
-					print("3",idx)
-					if x_pos < len(self.rows) and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
-						val = int(self.rows[y_pos][x_pos])
-						print(" ",val," d",depth)
-						h['basins'][idx] = val
-						#xxx = input()
-						self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
-						x_pos += 1
-					else:
-						build_basin_x_pos = False
+	# 			build_basin_y_pos = True
+	# 			y_pos += 1
+	# 			while build_basin_y_pos:
+	# 				idx = "%d,%d"%(x_pos,y_pos)
+	# 				#print("1",idx)
+	# 				if y_pos < len(self.rows) and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
+	# 					val = int(self.rows[y_pos][x_pos])
+	# 					#print(" ",val," d",depth)
+	# 					h['basins'][idx] = val
+	# 					#xxx = input()
+	# 					self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
+	# 					y_pos += 1
+	# 				else:
+	# 					build_basin_y_pos = False
 
-				build_basin_x_neg = True
-				x_pos -= 1
-				while build_basin_x_neg:
-					idx = "%d,%d"%(x_pos,y_pos)
-					print("4",idx)
-					if x_pos >= 0 and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
-						val = int(self.rows[y_pos][x_pos])
-						print(" ",val," d",depth)
-						h['basins'][idx] = val
-						#xxx = input()
-						self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
-						x_pos -= 1
-					else:
-						build_basin_x_neg = False
+	# 			build_basin_y_neg = True
+	# 			y_pos -= 1
+	# 			while build_basin_y_neg:
+	# 				idx = "%d,%d"%(x_pos,y_pos)
+	# 				#print("2",idx)
+	# 				if y_pos >= 0 and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
+	# 					val = int(self.rows[y_pos][x_pos])
+	# 					#print(" ",val," d",depth)
+	# 					h['basins'][idx] = val
+	# 					#xxx = input()
+	# 					self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
+	# 					y_pos -= 1
+	# 				else:
+	# 					build_basin_y_neg = False
+
+	# 		elif axis == 'x':
+	# 			new_axis = 'y'
+
+	# 			build_basin_x_pos = True
+	# 			x_pos += 1
+	# 			while build_basin_x_pos:
+	# 				idx = "%d,%d"%(x_pos,y_pos)
+	# 				#print("3",idx)
+	# 				if x_pos < len(self.rows) and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
+	# 					val = int(self.rows[y_pos][x_pos])
+	# 					#print(" ",val," d",depth)
+	# 					h['basins'][idx] = val
+	# 					#xxx = input()
+	# 					self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
+	# 					x_pos += 1
+	# 				else:
+	# 					build_basin_x_pos = False
+
+	# 			build_basin_x_neg = True
+	# 			x_pos -= 1
+	# 			while build_basin_x_neg:
+	# 				idx = "%d,%d"%(x_pos,y_pos)
+	# 				#print("4",idx)
+	# 				if x_pos >= 0 and int(self.rows[y_pos][x_pos]) < 9 and idx not in h['basins']:
+	# 					val = int(self.rows[y_pos][x_pos])
+	# 					#print(" ",val," d",depth)
+	# 					h['basins'][idx] = val
+	# 					#xxx = input()
+	# 					self.recursive_basin_search(hh,h['basins'][idx],x_pos,y_pos,new_axis, depth + 1)
+	# 					x_pos -= 1
+	# 				else:
+	# 					build_basin_x_neg = False
 
 
 def puzzle_text():
