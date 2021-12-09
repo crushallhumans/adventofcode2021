@@ -395,15 +395,16 @@ abcdefg: 8
 			elif j == 8 and i != decoded_order[0]:
 				decoded_order[2] = i
 			#"g6"
-			elif j == 7 and i not in split_unique_symbols[self.unique_digits[4]]:
+			elif j == 7 and i not in split_unique_symbols[4]:
 				decoded_order[6] = i
 			#"d3"
-			elif j == 7 and i in split_unique_symbols[self.unique_digits[4]]:
+			elif j == 7 and i in split_unique_symbols[4]:
 				decoded_order[3] = i
 
 
 		if DEBUG: print(decoded_order)
 
+		### commented out - first pass at decoding, didn't work
 		## !! can't rely on similarity between signals / order within a single signal is irrelevant
 		# for i in unique_digit_signals:
 		# 	if DEBUG: print("---> ",i)
