@@ -72,7 +72,7 @@ def one_star(param_set, linear = False):
 		if DEBUG: print(fuel_costs)
 
 		for i in range(start,end):
-			print(i,lent,time.time()-t0)
+			if DEBUG: print(i,lent,time.time()-t0)
 			fuels.append(calc_set_fuel_linear(param_set,i,fuel_costs))	 
 			
 	else:
