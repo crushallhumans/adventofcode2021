@@ -17,21 +17,21 @@ def puzzle(param_set, star = "one", steps = 100):
 	for i in param_set:
 		L.add_row(i)
 	L.build_cols_and_points()
-	print(L)
-	L.advance_steps(steps)
-	return len(L.flashes[-1])
+	if DEBUG: print(L)
+	L.advance_steps(steps, True if star == "two" else False)
+	if (star == "two"):
+		return len(L.flashes)
+	else:
+		return L.total_flashes()
 
 def one_star(param_set, steps = 100):
+	print("---------------one_star--------------------")
 	return puzzle(param_set,"one", steps)
 
 
-def two_star(param_set, steps = 100):
-	param_set = reprocess_input(param_set)
-	#return puzzle(param_set,"two", steps)
-	c = 7777
-	for i in param_set:
-		continue
-	return c
+def two_star(param_set, steps = 10000):
+	print("---------------two_star--------------------")
+	return puzzle(param_set,"two", steps)
 
 def reprocess_input(param_set):
 	if isinstance(param_set,str):
@@ -74,6 +74,12 @@ class Life:
 		x.append('')
 		return "\n".join(x)
 
+	def total_flashes(self):
+		total = 0
+		for i in self.flashes:
+			total += len(i.keys())
+		return total
+
 	def add_row(self,i):
 		self.rows.append(list(i))
 		if not self.width:
@@ -94,9 +100,12 @@ class Life:
 				d += 1
 			c += 1
 
-	def advance_steps(self,n):
+	def advance_steps(self,n, break_if_sync = False):
 		for i in range(0,n):
 			self.advance()
+			if break_if_sync and ( len(self.points.keys()) == len(self.flashes[-1].keys()) ):
+				if DEBUG: print ("flashes synced at ", len(self.flashes))
+				break
 
 	def advance(self):
 		self.current_flashes = {}
@@ -111,7 +120,7 @@ class Life:
 			pos = i.split(',')
 			self.simple_box_search([int(pos[0]),int(pos[1])])
 		self.flashes.append(self.current_flashes.copy())
-		print(self)
+		if DEBUG: print(self)
 
 	def simple_box_search(self,pos):
 		checks = [
@@ -127,14 +136,15 @@ class Life:
 		for i in checks:
 			idx = "%d,%d"%(i[0],i[1])
 			if idx in self.points:
-				if self.points[idx] >= 9: # and idx not in self.current_flashes:
-					print("sbs ",idx,self.points[idx])
-					self.points[idx] = 0
-					self.current_flashes[idx] = True
-					self.simple_box_search([i[0],i[1]])
-				else:
-					self.points[idx] += 1
-		print(self)
+				if self.points[idx] != 0:
+					if self.points[idx] >= 9: # and idx not in self.current_flashes:
+	#					print("sbs ",idx,self.points[idx])
+						self.points[idx] = 0
+						self.current_flashes[idx] = True
+						self.simple_box_search([i[0],i[1]])
+					else:
+						self.points[idx] += 1
+		#print(self)
 
 
 
@@ -180,12 +190,13 @@ class testCase(unittest.TestCase):
 			1656
 		)
 
-	def test_two_star(self):
+	def test_two_star_200(self):
 		self.assertEqual(
 			two_star(
-				self.__class__.test_set
+				self.__class__.test_set,
+				200
 			),
-			7777
+			195
 		)
 
 

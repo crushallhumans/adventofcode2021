@@ -12,6 +12,7 @@ import unittest
 DEBUG = False
 
 def one_star(param_set):
+	print("---------------one_star--------------------")
 	param_set = reprocess_input(param_set)
 	c = 8888
 	for i in param_set:
@@ -20,6 +21,7 @@ def one_star(param_set):
 
 
 def two_star(param_set):
+	print("---------------two_star--------------------")
 	param_set = reprocess_input(param_set)
 	c = 7777
 	for i in param_set:
