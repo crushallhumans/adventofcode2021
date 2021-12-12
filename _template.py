@@ -79,7 +79,7 @@ if __name__ == '__main__':
 	except:
 		DEBUG = False
 		filename_script = os.path.basename(__file__)
-		print (filename_script)
+		print("---------------%s--------------------"%filename_script)
 		filename = filename_script.split('.')[0]
 		input_set = ()
 		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/2021/%s.txt" % filename) as input_file:
