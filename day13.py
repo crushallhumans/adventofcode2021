@@ -197,6 +197,12 @@ class CartesianTheater():
 			operating_grid = self.rows
 			prev_max_x = axis-1
 			prev_max_y = self.max_y
+			if self.max_x != axis*2:
+				raise Exception("bad x axis: ",self.max_x,axis)
+		else:
+			if self.max_y != axis*2:
+				raise Exception("bad y axis: ",self.max_y,axis)
+
 
 
 		new_points = {}
