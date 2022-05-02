@@ -1,7 +1,7 @@
 # adventofcode 2021
 # crushallhumans
 # puzzle 13
-# 12/13/2021
+# 12/13/2021 - 1/6/2022
 
 import os
 import re
@@ -10,7 +10,7 @@ import math
 import json
 import unittest
 
-DEBUG = False
+DEBUG = True
 
 def puzzle(param_set,return_after_one = True):
 	param_set = reprocess_input(param_set)
@@ -35,11 +35,12 @@ def puzzle(param_set,return_after_one = True):
 	for i in folds:
 		C.add_fold(i)		
 
-	C.build_rows_and_cols_from_points()
+	#C.build_rows_and_cols_from_points()
 
-	print(C.folds)
+	#print(C.folds)
 
-	return C.do_folds(return_after_one)
+	#return C.do_folds(return_after_one)
+	return C.solution_from_reddit()
 
 def one_star(param_set):
 	print("---------------one_star--------------------")
@@ -61,6 +62,7 @@ class CartesianTheater():
 	max_x = -1
 	max_y = -1
 	points = {}
+	dots = []
 	inited = False
 	rows = []
 	cols = []
@@ -70,6 +72,7 @@ class CartesianTheater():
 		self.max_x = 0
 		self.max_y = 0
 		self.points = {}
+		self.dots = []
 		self.rows = []
 		self.cols = []
 		self.folds = []
@@ -107,9 +110,11 @@ class CartesianTheater():
 
 	def add_point(self,i):
 		s = i.split(',')
+		ss = [int(s[0]),int(s[1])]
+		self.dots.append(ss)
 		if len(s) > 1:
 			self.points[i] = '#'
-			#print (s)
+			print (ss)
 			if int(s[0]) > self.max_x:
 				self.max_x = int(s[0])
 			if int(s[1]) > self.max_y:
@@ -133,14 +138,14 @@ class CartesianTheater():
 			c += 1
 
 	def build_rows_and_cols_from_points(self, prev_max_x = 0, prev_max_y = 0):
-		if prev_max_y > 0:
-			self.max_y = prev_max_y
-		if prev_max_x > 0:
-			self.max_x = prev_max_x
+#		if prev_max_y > 0:
+#			self.max_y = prev_max_y
+#		if prev_max_x > 0:
+#			self.max_x = prev_max_x
 		#width = 0
-		for i in range(0,self.max_y+1):
+		for i in range(0,self.max_y):
 			row = []
-			for j in range(0,self.max_x+1):
+			for j in range(0,self.max_x):
 				match = "%d,%d"%(j,i)
 				if match in self.points.keys():
 					row.append('#')
@@ -160,10 +165,53 @@ class CartesianTheater():
 		if DEBUG: print(self)
 
 
+	def solution_from_reddit(self):
+		maxX = max([int(x[0]) for x in self.dots])+1
+		maxY = max([int(y[1]) for y in self.dots])+1
+
+		grid = [['.']*maxX for i in range(maxY)]
+
+		for dot in self.dots:
+			grid[dot[1]][dot[0]] = "#"
+
+		for fold in self.folds:
+			print(f"Fold {fold[0]}={fold[1]}")
+			coord = fold[1]
+			if fold[0] == "x":
+				dotsToMove = [d for d in self.dots if d[0] > coord]
+				for dot in dotsToMove:
+					coordDif = dot[0] - coord
+					grid[dot[1]][coord-coordDif] = "#"
+					if not [coord-coordDif, dot[1]] in self.dots:
+						self.dots.append([coord-coordDif, dot[1]])
+					self.dots.remove(dot)
+				for y in range(len(grid)):
+					cols = coord
+					while cols < len(grid[y]):
+						grid[y].pop()			
+			elif fold[0] == "y":
+				dotsToMove = [d for d in self.dots if d[1] > coord]
+				for dot in dotsToMove:
+					coordDif = dot[1] - coord
+					grid[coord-coordDif][dot[0]] = "#"
+					if not [dot[0], coord-coordDif] in self.dots:
+						self.dots.append([dot[0], coord-coordDif])
+					self.dots.remove(dot)
+				rows = coord
+				maxY = len(grid)
+				while rows < maxY:
+					grid.pop()
+					rows += 1
+
+			print("Dots", len(self.dots))
+
+			[print("".join(r)) for r in grid]		
+
+
 	def add_fold(self,i):
 		s = i.split('fold along ')
 		ss = s[1].split('=')
-		self.folds.append(ss)
+		self.folds.append([ss[0],int(ss[1])])
 
 	def do_folds(self, return_after_one = True):
 		c = 0
@@ -177,7 +225,7 @@ class CartesianTheater():
 					return len(Cf.points.keys())
 					break
 			else:
-				print('folding inner',i)
+				#print('folding inner',i)
 				print(Cf)
 				Cf = Cf.do_fold(i)
 				print(Cf)
@@ -190,30 +238,34 @@ class CartesianTheater():
 		axis = int(fold[1])
 		operating_grid = self.cols #assume y
 		prev_max_x = self.max_x
-		prev_max_y = axis-1
+		prev_max_y = axis
+
+		asymmetric = False
 
 		if fold[0] == 'x':
-			if DEBUG: print ("using rows")
+			asymmetric = self.max_x != axis*2
+			if DEBUG: print ("folding rows: ",self.max_x,axis,("symmetric" if not asymmetric else "Asymmetric"))
 			operating_grid = self.rows
-			prev_max_x = axis-1
+			prev_max_x = axis
 			prev_max_y = self.max_y
-			if self.max_x != axis*2:
-				raise Exception("bad x axis: ",self.max_x,axis)
+			#if self.max_x != axis*2:
+			#	raise Exception("bad x axis: ",self.max_x,axis)
 		else:
-			if self.max_y != axis*2:
-				raise Exception("bad y axis: ",self.max_y,axis)
+			asymmetric = self.max_y != axis*2
+			if DEBUG: print ("folding cols: ",self.max_y,axis,("symmetric" if not asymmetric else "Asymmetric"))
+			#if self.max_y != axis*2:
+			#	raise Exception("bad y axis: ",self.max_y,axis)
 
 
 
 		new_points = {}
 
 
-		#if DEBUG: print(len(operating_grid))
+		if asymmetric: print(len(operating_grid))
 		for i in range(0,len(operating_grid)):
 			ii = operating_grid[i]
 			#if DEBUG: print(i,ii)
 			k = 0
-			#if DEBUG: print(len(ii))
 			for j in range(len(ii)-1,axis,-1):
 				jj = ii[j]
 				kk = ii[k]
@@ -235,7 +287,7 @@ class CartesianTheater():
 			Cf.add_point(i)
 		Cf.build_rows_and_cols_from_points(prev_max_x, prev_max_y)
 		if DEBUG: print("new cf!")
-		#print(Cf)
+		if DEBUG: print(Cf)
 		#self.folded_points.append(Cf)
 		return Cf
 
@@ -436,12 +488,27 @@ fold along y=7
 fold along x=5
 """)
 
+	test_set_2 = ("""0,5
+1,4
+2,3
+
+fold along y=2
+""")
+
 	def test_one_star(self):
 		self.assertEqual(
 			one_star(
 				self.__class__.test_set
 			),
 			17
+		)
+
+	def test_one_star_crushing(self):
+		self.assertEqual(
+			one_star(
+				self.__class__.test_set_2
+			),
+			3
 		)
 
 	def test_two_star(self):
@@ -460,13 +527,13 @@ if __name__ == '__main__':
 		puzzle_text()
 
 	except:
-		DEBUG = False
+		#DEBUG = False
 		filename_script = os.path.basename(__file__)
 		print("---------------%s--------------------"%filename_script)
 		filename = filename_script.split('.')[0]
 		input_set = ()
 		with open("/Users/crushing/Development/crushallhumans/adventofcode2021/inputs/2021/%s.txt" % filename) as input_file:
-		    input_set = [input_line.strip() for input_line in input_file]
+			input_set = [input_line.strip() for input_line in input_file]
 		ret = one_star(input_set.copy())
 		print (ret)
 
