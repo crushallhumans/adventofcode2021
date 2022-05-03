@@ -1,7 +1,7 @@
 # adventofcode 2021
 # crushallhumans
 # puzzle 14
-# 1/6/2022 - ?
+# 1/6/2022 - 5/1/2022
 
 import os
 import re
@@ -58,7 +58,7 @@ def execute(param_set, steps):
 		letter_counts[a] += count[i]
 		letter_counts[b] += count[i]
 	for i in letter_counts:
-		letter_counts[i] = math.ceil(letter_counts[i]/2)
+		letter_counts[i] = math.ceil(letter_counts[i]/2) # each letter in a pair is a member of another pair
 	if DEBUG: print(letter_counts)
 
 	lo = 999999999999999999
